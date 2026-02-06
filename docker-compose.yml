@@ -1,0 +1,200 @@
+version: '3.8'
+
+services:
+  # ==========================================
+  # DATABASES
+  # ==========================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: athena-postgres
+    environment:
+      POSTGRES_USER: athena
+      POSTGRES_PASSWORD: athena_secure_pass
+      POSTGRES_DB: athena_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./shared/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U athena -d athena_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: athena-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ==========================================
+  # BACKEND SERVICES
+  # ==========================================
+  auth-service:
+    build:
+      context: .
+      dockerfile: services/auth-service/Dockerfile
+    container_name: athena-auth
+    ports:
+      - "7001:7001"
+    environment:
+      - DATABASE_URL=postgresql://athena:athena_secure_pass@postgres:5432/athena_db
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=athena-super-secret-jwt-key-2024
+      - SERVICE_PORT=7001
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  market-data-service:
+    build:
+      context: .
+      dockerfile: services/market-data-service/Dockerfile
+    container_name: athena-market-data
+    ports:
+      - "7002:7002"
+    environment:
+      - DATABASE_URL=postgresql://athena:athena_secure_pass@postgres:5432/athena_db
+      - REDIS_URL=redis://redis:6379
+      - SERVICE_PORT=7002
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  strategy-registry:
+    build:
+      context: .
+      dockerfile: services/strategy-registry/Dockerfile
+    container_name: athena-strategy
+    ports:
+      - "7003:7003"
+    environment:
+      - DATABASE_URL=postgresql://athena:athena_secure_pass@postgres:5432/athena_db
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=athena-super-secret-jwt-key-2024
+      - SERVICE_PORT=7003
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  risk-engine:
+    build:
+      context: .
+      dockerfile: services/risk-engine/Dockerfile
+    container_name: athena-risk
+    ports:
+      - "7004:7004"
+    environment:
+      - DATABASE_URL=postgresql://athena:athena_secure_pass@postgres:5432/athena_db
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=athena-super-secret-jwt-key-2024
+      - SERVICE_PORT=7004
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  execution-gateway:
+    build:
+      context: .
+      dockerfile: services/execution-gateway/Dockerfile
+    container_name: athena-execution
+    ports:
+      - "7005:7005"
+    environment:
+      - DATABASE_URL=postgresql://athena:athena_secure_pass@postgres:5432/athena_db
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=athena-super-secret-jwt-key-2024
+      - SERVICE_PORT=7005
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  stress-engine:
+    build:
+      context: .
+      dockerfile: services/stress-engine/Dockerfile
+    container_name: athena-stress
+    ports:
+      - "7006:7006"
+    environment:
+      - DATABASE_URL=postgresql://athena:athena_secure_pass@postgres:5432/athena_db
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=athena-super-secret-jwt-key-2024
+      - SERVICE_PORT=7006
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  audit-ledger:
+    build:
+      context: .
+      dockerfile: services/audit-ledger/Dockerfile
+    container_name: athena-audit
+    ports:
+      - "7007:7007"
+    environment:
+      - DATABASE_URL=postgresql://athena:athena_secure_pass@postgres:5432/athena_db
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=athena-super-secret-jwt-key-2024
+      - SERVICE_PORT=7007
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ==========================================
+  # FRONTEND
+  # ==========================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: athena-frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - auth-service
+      - market-data-service
+      - strategy-registry
+      - risk-engine
+      - execution-gateway
+      - stress-engine
+      - audit-ledger
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+
+
+networks:
+  default:
+    name: athena-network

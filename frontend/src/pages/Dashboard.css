@@ -1,0 +1,139 @@
+.dashboard-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.metric-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: var(--space-sm);
+}
+
+.metric-icon {
+    color: var(--text-tertiary);
+}
+
+.card-title-lg {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--space-xs);
+}
+
+.card-subtitle {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.time-range-buttons {
+    display: flex;
+    gap: 2px;
+    background: var(--bg-elevated);
+    border-radius: var(--radius-md);
+    padding: 2px;
+}
+
+.time-btn {
+    padding: var(--space-xs) var(--space-md);
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 500;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.time-btn:hover {
+    color: var(--text-primary);
+}
+
+.time-btn.active {
+    background: var(--primary);
+    color: white;
+}
+
+.right-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-lg);
+}
+
+.net-exposure-gauge {
+    margin-top: var(--space-md);
+}
+
+.gauge-scale {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.625rem;
+    color: var(--text-tertiary);
+    margin-bottom: var(--space-xs);
+}
+
+.gauge-track {
+    height: 8px;
+    background: linear-gradient(90deg, var(--danger), var(--bg-elevated) 50%, var(--success));
+    border-radius: var(--radius-full);
+    position: relative;
+}
+
+.gauge-marker {
+    position: absolute;
+    top: -4px;
+    width: 4px;
+    height: 16px;
+    background: var(--text-primary);
+    border-radius: 2px;
+    transform: translateX(-50%);
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+}
+
+.var-usage {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.strategy-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.strategy-name {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.strategy-id {
+    font-size: 0.75rem;
+    color: var(--text-tertiary);
+    font-family: var(--font-mono);
+}
+
+/* Chart tooltip */
+.recharts-tooltip-wrapper {
+    outline: none;
+}
+
+/* Responsive */
+@media (max-width: 1400px) {
+    .metrics-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 1200px) {
+    .main-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .metrics-row {
+        grid-template-columns: 1fr;
+    }
+}
